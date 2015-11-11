@@ -102,15 +102,25 @@ public class Arena {
             
             LOG.info("Number of games to play : " + n);
             
-            Class<?> clazz = Class.forName(engines.getProperty(engineName));
             
-            // Create the engine
+            int[] wins = new int[playersCommandLines.size()];
+            for (int i = 0; i < playersCommandLines.size(); ++i) {
+                wins[i] = 0;
+            }
+            
+            Class<?> clazz = Class.forName(engines.getProperty(engineName));
             for (int i = 0; i < n; ++i) {
                 Engine engine = (Engine) clazz.newInstance();
                 engine.setCommandLines(playersCommandLines);
                 GameResult result = engine.start();
                 
-                LOG.info("Winner : " + (result.getWinner() + 1));
+                LOG.info("Winner of this game : " + (result.getWinner() + 1));
+                
+                wins[result.getWinner()] += 1;
+            }
+            
+            for (int i = 0; i < wins.length; ++i) {
+                LOG.info("Player " + (i + 1) + " wins : " + wins[i]);
             }
         } catch (Exception exception) {
             LOG.fatal("cg-arena fail to start", exception);

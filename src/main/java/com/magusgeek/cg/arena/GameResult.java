@@ -5,7 +5,6 @@ public class GameResult {
     private int winner;
 
     public GameResult(int winner) {
-        super();
         this.winner = winner;
     }
 
