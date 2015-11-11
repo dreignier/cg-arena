@@ -1,7 +1,6 @@
 package com.magusgeek.cg.arena;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -15,11 +14,12 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 
 import com.magusgeek.cg.arena.engine.Engine;
+import com.magusgeek.cg.arena.util.Mutable;
 
 public class Arena {
-
     private static final Log LOG = LogFactory.getLog(Arena.class);
-
+    
+    @SuppressWarnings("unchecked")
     public static void main(String[] args) {
         try {
             Options options = new Options();
@@ -28,6 +28,7 @@ public class Arena {
             options.addOption("v", false, "If given, cg-arena will be very talkative");
             options.addOption("e", true, "The engine to use");
             options.addOption("n", true, "Number of games to play. Default 1");
+            options.addOption("t", true, "Number of thread to spawn for the area. Default 1");
             options.addOption("p1", true, "Command line for player 1 program");
             options.addOption("p2", true, "Command line for player 2 program");
             options.addOption("p3", true, "Command line for player 3 program");
@@ -37,7 +38,7 @@ public class Arena {
             
             // Need help ?
             if (cmd.hasOption("h")) {
-                new HelpFormatter().printHelp("-e <engine> -n <games> -p1 <player1 command line> -p2 <player2 command line> -p3 <player3 command line> -p4 <player4 command line> [-v]", options);
+                new HelpFormatter().printHelp("-e <engine> -p1 <player1 command line> -p2 <player2 command line> -p3 <player3 command line> -p4 <player4 command line> [-v -n <games> -t <thread>]", options);
                 System.exit(0);
             }
 
@@ -103,30 +104,27 @@ public class Arena {
             
             LOG.info("Number of games to play : " + n);
             
+            // Thread count
+            int t = 1;
+            try {
+                t = Integer.valueOf(cmd.getOptionValue("t"));
+            } catch (Exception exception) {
+                
+            }
+            
+            LOG.info("Number of thread to spawn : " + t);
             
             PlayerStats[] playerStats = new PlayerStats[playersCommandLines.size()];
             for (int i = 0; i < playersCommandLines.size(); ++i) {
                 playerStats[i] = new PlayerStats();
             }
             
-            Class<?> clazz = Class.forName(engines.getProperty(engineName));
-            for (int i = 0; i < n; ++i) {
-                Engine engine = (Engine) clazz.newInstance();
-                engine.setCommandLines(playersCommandLines);
-                GameResult result = engine.start();
-                
-                List<Integer> positions = result.getPositions();
-                Collections.reverse(positions);
-                
-                for (int j = 0; j < positions.size(); ++j) {
-                    playerStats[positions.get(j)].add(j);
-                }
-                
-                LOG.info("End of game " + (i + 1));
-            }
+            // Spawn arena threads
             
-            for (int i = 0; i < playerStats.length; ++i) {
-                LOG.info("Player " + (i + 1) + " stats : " + playerStats[i]);
+            Class<Engine> clazz = (Class<Engine>) Class.forName(engines.getProperty(engineName));
+            Mutable<Integer> count = new Mutable<Integer>(0); 
+            for (int i = 0; i < t; ++i) {
+                new ArenaThread(i + 1, playersCommandLines, count, playerStats, clazz, n).start();
             }
         } catch (Exception exception) {
             LOG.fatal("cg-arena fail to start", exception);
