@@ -83,6 +83,11 @@ public class Arena {
                 System.exit(1);
             }
             
+            if (playersCommandLines.size() > 4) {
+                LOG.fatal("You can't give more than 4 players, " + playersCommandLines.size() + " given");
+                System.exit(1);
+            }
+            
             for (int i = 0; i < playersCommandLines.size(); ++i) {
                 LOG.info("Player " + (i + 1) + " command line : " + playersCommandLines.get(i));
             }
