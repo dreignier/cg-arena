@@ -26,6 +26,7 @@ public class Arena {
             options.addOption("h", false, "Print the help");
             options.addOption("v", false, "If given, cg-arena will be very talkative");
             options.addOption("e", true, "The engine to use");
+            options.addOption("n", true, "Number of games to play. Default 1");
             options.addOption("p1", true, "Command line for player 1 program");
             options.addOption("p2", true, "Command line for player 2 program");
             options.addOption("p3", true, "Command line for player 3 program");
@@ -35,7 +36,7 @@ public class Arena {
             
             // Need help ?
             if (cmd.hasOption("h")) {
-                new HelpFormatter().printHelp("-e <engine> -p1 <player1 command line> -p2 <player2 command line> -p3 <player3 command line> -p4 <player4 command line> [-v]", options);
+                new HelpFormatter().printHelp("-e <engine> -n <games> -p1 <player1 command line> -p2 <player2 command line> -p3 <player3 command line> -p4 <player4 command line> [-v]", options);
                 System.exit(0);
             }
 
@@ -86,11 +87,26 @@ public class Arena {
                 LOG.info("Player " + (i + 1) + " command line : " + playersCommandLines.get(i));
             }
             
-            // Create the engine
+            // Game count
+            int n = 1;
+            try {
+                n = Integer.valueOf(cmd.getOptionValue("n"));
+            } catch (Exception exception) {
+                
+            }
+            
+            LOG.info("Number of games to play : " + n);
+            
             Class<?> clazz = Class.forName(engines.getProperty(engineName));
-            Engine engine = (Engine) clazz.newInstance();
-            engine.setCommandLines(playersCommandLines);
-            engine.start();
+            
+            // Create the engine
+            for (int i = 0; i < n; ++i) {
+                Engine engine = (Engine) clazz.newInstance();
+                engine.setCommandLines(playersCommandLines);
+                GameResult result = engine.start();
+                
+                LOG.info("Winner : " + (result.getWinner() + 1));
+            }
         } catch (Exception exception) {
             LOG.fatal("cg-arena fail to start", exception);
             System.exit(1);

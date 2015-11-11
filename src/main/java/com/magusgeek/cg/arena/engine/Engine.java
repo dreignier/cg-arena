@@ -7,11 +7,16 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class Engine {
+import com.magusgeek.cg.arena.GameResult;
+
+public abstract class Engine {
     private static final Log LOG = LogFactory.getLog(Engine.class);
 
     private List<String> commandLines;
-    private List<Process> process;
+    protected List<Process> process;
+    protected int turn;
+    protected boolean end;
+    protected GameResult result;
 
     // Reminder - Keep an empty constructor. We are instanciated by reflection
     public Engine() {
@@ -21,19 +26,62 @@ public class Engine {
     public void setCommandLines(List<String> commandLines) {
         this.commandLines = commandLines;
     }
-    
-    public void start() {
-        LOG.info("Starting engine");
-        
+
+    public GameResult start() {
+        boolean debug = LOG.isDebugEnabled();
+
+        if (debug) {
+            LOG.debug("Starting engine");
+        }
+
         for (int i = 0; i < commandLines.size(); ++i) {
-            LOG.info("Starting player " + (i + 1) + " process");
+            if (debug) {
+                LOG.debug("Starting player " + (i + 1) + " process");
+            }
+            
             try {
                 process.add(new ProcessBuilder(commandLines.get(i).split(" ")).start());
             } catch (IOException exception) {
                 LOG.fatal("Unable to start player " + (i + 1) + " process", exception);
-                process.forEach(p -> p.destroy());
+                destroyAll();
                 System.exit(1);
             }
         }
+
+        try {
+            if (debug) {
+                LOG.debug("Initializing");
+            }
+
+            initialize();
+
+            if (debug) {
+                LOG.debug("Playing loop");
+            }
+
+            turn = 1;
+            while (!end) {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Playing turn " + turn);
+                }
+                play();
+
+                turn += 1;
+            }
+        } catch (Exception exception) {
+            LOG.fatal("Exception during the play", exception);
+            destroyAll();
+            System.exit(1);
+        }
+        
+        return result;
     }
+
+    public void destroyAll() {
+        process.forEach(p -> p.destroy());
+    }
+
+    abstract protected void play() throws Exception;
+
+    abstract protected void initialize() throws Exception;
 }
