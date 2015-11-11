@@ -1,6 +1,7 @@
 package com.magusgeek.cg.arena;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -103,9 +104,9 @@ public class Arena {
             LOG.info("Number of games to play : " + n);
             
             
-            int[] wins = new int[playersCommandLines.size()];
+            PlayerStats[] playerStats = new PlayerStats[playersCommandLines.size()];
             for (int i = 0; i < playersCommandLines.size(); ++i) {
-                wins[i] = 0;
+                playerStats[i] = new PlayerStats();
             }
             
             Class<?> clazz = Class.forName(engines.getProperty(engineName));
@@ -114,13 +115,18 @@ public class Arena {
                 engine.setCommandLines(playersCommandLines);
                 GameResult result = engine.start();
                 
-                LOG.info("Winner of this game : " + (result.getWinner() + 1));
+                List<Integer> positions = result.getPositions();
+                Collections.reverse(positions);
                 
-                wins[result.getWinner()] += 1;
+                for (int j = 0; j < positions.size(); ++j) {
+                    playerStats[positions.get(j)].add(j);
+                }
+                
+                LOG.info("End of game " + (i + 1));
             }
             
-            for (int i = 0; i < wins.length; ++i) {
-                LOG.info("Player " + (i + 1) + " wins : " + wins[i]);
+            for (int i = 0; i < playerStats.length; ++i) {
+                LOG.info("Player " + (i + 1) + " stats : " + playerStats[i]);
             }
         } catch (Exception exception) {
             LOG.fatal("cg-arena fail to start", exception);

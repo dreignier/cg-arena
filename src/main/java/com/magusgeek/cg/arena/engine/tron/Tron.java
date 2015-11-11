@@ -2,12 +2,12 @@ package com.magusgeek.cg.arena.engine.tron;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.magusgeek.cg.arena.GameResult;
 import com.magusgeek.cg.arena.engine.Engine;
 
 public class Tron extends Engine {
@@ -33,11 +33,12 @@ public class Tron extends Engine {
         for (int i = 0; i < process.size(); ++i) {
             int x, y;
 
-            boolean free = true;
+            boolean free;
             do {
                 x = random.nextInt(W);
                 y = random.nextInt(H);
 
+                free = true;
                 for (int j = 0; free && j < players.size(); ++j) {
                     Player p = players.get(j);
                     free = p.getX() != x || p.getY() != y;
@@ -58,6 +59,8 @@ public class Tron extends Engine {
     private void kill(Player player) {
         player.setDead(true);
         playersCount -= 1;
+        
+        result.getPositions().add(player.getId());
 
         // If we have only 1 player left, it's the winner !
         if (playersCount == 1) {
@@ -66,10 +69,11 @@ public class Tron extends Engine {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Winner : " + id);
             }
+            
+            result.getPositions().add(id);
 
             destroyAll();
             end = true;
-            result = new GameResult(id);
         } else {
             // Clean the map
             for (int y = 0; y < H; ++y) {
@@ -90,16 +94,41 @@ public class Tron extends Engine {
                 continue;
             }
 
+            if (debug) {
+                LOG.debug("Player " + (player.getId() + 1) + " turn " + turn);
+                LOG.debug("Sending informations to the process");
+            }
             player.getOut().println(players.size() + " " + player.getId());
             for (Player p : players) {
                 player.getOut().println(p.getStartX() + " " + p.getStartY() + " " + p.getX() + " " + p.getY());
             }
             player.getOut().flush();
 
+            if (debug) {
+                LOG.debug("Cleaning error stream");
+            }
             player.cleanErrorStream();
 
+            String response = null;
             try {
-                Direction dir = Direction.valueOf(player.getIn().nextLine());
+                response = player.getIn().nextLine();
+            } catch (NoSuchElementException exception) {
+                LOG.warn("Exception during play of player " + (player.getId() + 1), exception);
+                kill(player);
+
+                if (end) {
+                    break;
+                } else {
+                    continue;
+                }
+            }
+
+            if (debug) {
+                LOG.debug("Response : " + response);
+            }
+
+            try {
+                Direction dir = Direction.valueOf(response);
                 Point next = player.next(dir);
                 int x = next.getX();
                 int y = next.getY();

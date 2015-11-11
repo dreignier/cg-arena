@@ -1,15 +1,18 @@
 package com.magusgeek.cg.arena;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class GameResult {
 
-    private int winner;
+    private List<Integer> positions;
 
-    public GameResult(int winner) {
-        this.winner = winner;
+    public GameResult() {
+        positions = new ArrayList<>();
     }
 
-    public int getWinner() {
-        return winner;
+    public List<Integer> getPositions() {
+        return positions;
     }
 
 }

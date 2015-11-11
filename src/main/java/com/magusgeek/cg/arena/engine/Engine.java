@@ -52,6 +52,8 @@ public abstract class Engine {
             if (debug) {
                 LOG.debug("Initializing");
             }
+            
+            result = new GameResult();
 
             initialize();
 
