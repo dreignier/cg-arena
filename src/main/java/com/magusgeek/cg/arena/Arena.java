@@ -13,6 +13,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 
+import com.magusgeek.cg.arena.engine.Engine;
+
 public class Arena {
 
     private static final Log LOG = LogFactory.getLog(Arena.class);
@@ -31,11 +33,13 @@ public class Arena {
 
             CommandLine cmd = new DefaultParser().parse(options, args);
             
+            // Need help ?
             if (cmd.hasOption("h")) {
                 new HelpFormatter().printHelp("-e <engine> -p1 <player1 command line> -p2 <player2 command line> -p3 <player3 command line> -p4 <player4 command line> [-v]", options);
                 System.exit(0);
             }
 
+            // Verbose mode
             boolean verbose = cmd.hasOption("v");
             if (verbose) {
                 Configurator.setRootLevel(Level.ALL);
@@ -60,7 +64,10 @@ public class Arena {
                     LOG.fatal("- " + key);
                 }
             }
+            
+            LOG.info("Engine : " + engineName);
 
+            // Get command lines for payers
             List<String> playersCommandLines = new ArrayList<>();
             for (int i = 1; i < 5; ++i) {
                 String p = cmd.getOptionValue("p" + i);
@@ -74,6 +81,16 @@ public class Arena {
                 LOG.fatal("At least 2 players are required, only " + playersCommandLines.size() + " given");
                 System.exit(1);
             }
+            
+            for (int i = 0; i < playersCommandLines.size(); ++i) {
+                LOG.info("Player " + (i + 1) + " command line : " + playersCommandLines.get(i));
+            }
+            
+            // Create the engine
+            Class<?> clazz = Class.forName(engines.getProperty(engineName));
+            Engine engine = (Engine) clazz.newInstance();
+            engine.setCommandLines(playersCommandLines);
+            engine.start();
         } catch (Exception exception) {
             LOG.fatal("cg-arena fail to start", exception);
             System.exit(1);
