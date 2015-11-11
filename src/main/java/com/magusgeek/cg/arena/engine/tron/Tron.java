@@ -150,6 +150,10 @@ public class Tron extends Engine {
                     kill(player);
                     continue;
                 }
+                
+                if (end) {
+                    break;
+                }
 
                 map[y][x] = player.getId();
                 player.move(x, y);
