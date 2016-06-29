@@ -39,6 +39,10 @@ public class CodeBusters extends Engine {
 			
 			System.out.println("TURN  ---- " + turn +" -----");
 		}
+		int captured0 = (int) game.ghosts.stream().filter(x -> x.captured == 0).count();
+		int captured1 = (int) game.ghosts.stream().filter(x -> x.captured == 1).count();
+		result.getPositions().add(captured0);
+		result.getPositions().add(captured1);
 	}
 	
 	private List<Order> read(Game g, PlayerBase w, int teamId) throws IOException {
