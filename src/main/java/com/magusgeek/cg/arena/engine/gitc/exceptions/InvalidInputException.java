@@ -1,9 +1,9 @@
-package com.magusgeek.cg.arena.engine.gitc;
+package com.magusgeek.cg.arena.engine.gitc.exceptions;
 
 public class InvalidInputException extends Exception {
 
   public InvalidInputException(String message1, String message2) {
-    // TODO Auto-generated constructor stub
+    super ("waiting : "+message1+" got : "+message2);
   }
 
 }

@@ -13,6 +13,10 @@ import java.util.regex.Pattern;
 
 import com.magusgeek.cg.arena.engine.Engine;
 import com.magusgeek.cg.arena.engine.PlayerBase;
+import com.magusgeek.cg.arena.engine.gitc.exceptions.GameOverException;
+import com.magusgeek.cg.arena.engine.gitc.exceptions.InvalidFormatException;
+import com.magusgeek.cg.arena.engine.gitc.exceptions.InvalidInputException;
+import com.magusgeek.cg.arena.engine.gitc.exceptions.WinException;
 
 public class GhostInTheCell extends Engine {
 
@@ -336,11 +340,14 @@ public class GhostInTheCell extends Engine {
   
   @Override
   public void initialize() throws Exception {
-    Properties prop= new Properties();
-    prop.setProperty("seed", "0");
-    prop.setProperty("factory_count", "7");
-    prop.setProperty("initial_unit_count", "10");
+    Entity.UNIQUE_ENTITY_ID = 0;
     
+    
+    seed = System.currentTimeMillis();
+    customFactoryCount = null;
+    customInitialUnitCount = null;
+    Properties prop= getConfiguration();
+        
     int playerCount = process.size();
 
     initReferee(playerCount, prop);
@@ -359,6 +366,12 @@ public class GhostInTheCell extends Engine {
   
   @Override
   public void play() throws Exception {
+    //System.err.println("Turn : "+turn+ "score :"+players[0].score+" / "+players[1].score);
+    if (turn > 400) {
+      handleWinner();
+      return;
+    }
+    
     for (int i=0;i<2;i++) {
       String[] inputForPlayer = getInputForPlayer(turn , i);    
       for (String output : inputForPlayer) {
@@ -370,13 +383,31 @@ public class GhostInTheCell extends Engine {
       
       // wait for player output!
       String response = playerProcesses[i].getIn().nextLine();
-      System.err.println(response);
+//      System.err.println(response);
       String output[] = { response };
       handlePlayerOutput(0, turn, i, output);
-      
+    }
+
+    try {
+      updateGame(turn);
+    } catch (GameOverException goe) {
+      handleWinner();
     }
   }
   
+  private void handleWinner() {
+    end = true;
+    if (players[0].score < players[1].score) {
+      result.getPositions().add(0);
+      result.getPositions().add(1);
+    } else {
+      result.getPositions().add(1);
+      result.getPositions().add(0);
+    }
+    
+    destroyAll();
+  }
+
   protected void initReferee(int playerCount, Properties prop) throws InvalidFormatException {
     
       this.seed = Long.valueOf(prop.getProperty("seed", String.valueOf(new Random(System.currentTimeMillis()).nextLong())));
