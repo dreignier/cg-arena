@@ -1,4 +1,7 @@
 # cg-arena
+
+**cg-arena is now deprecated. Please use [cg-brutaltester](https://github.com/dreignier/cg-brutaltester) instead.
+
 CodingGame arena emulator
 
 This arena is mean to emulate the behavior of an arena for the [CodinGame website](https://www.codingame.com).
