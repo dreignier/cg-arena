@@ -1,6 +1,6 @@
 # cg-arena
 
-**cg-arena is now deprecated. Please use [cg-brutaltester](https://github.com/dreignier/cg-brutaltester) instead.
+**cg-arena is now deprecated. Please use [cg-brutaltester](https://github.com/dreignier/cg-brutaltester) instead.**
 
 CodingGame arena emulator
 
